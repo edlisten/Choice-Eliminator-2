@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+<!--<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css"> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+ 
+<!-- This will fix the scroolbar caused by materialze.css --> 
+  <style> 
+   [class] {
+           will-change: unset;
+          -webkit-backface-visibility: visible;
+        /*  backface-visibility: visible; */
+          }
+   [type="checkbox"]:checked + label:before {
+          -webkit-backface-visibility: visible;
+          backface-visibility: visible;
+         }
+   </style> 
+
+<!--https://design.google.com/icons/ -->
+
+<style>
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+.material-icons.md-dark.pointer {cursor: pointer;}
+</style>
+
+
+ <style>main {top: 30px;bottom: 26px;width: 100%} body{margin:5;width:100%;height:100%;overflow-x:hidden}footer,header{position:fixed;width:100%}header{top:0}footer{bottom:0}main{position:absolute;border-top:2px solid #F2F2F2;border-bottom:2px solid #F2F2F2;overflow:auto;overflow-x:hidden}</style>
+     
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+
+<script>
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// on Open
+//////////////////////////////////////////////////////////////////////////////////////////////////
+$(function() {
+    google.script.run.withSuccessHandler(populateChoices).withFailureHandler(fail).getCESettingsDefaults();
+});
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Populate defaults
+// onChange events
+//////////////////////////////////////////////////////////////////////////////////////////////////
+function populateChoices(defaults) {
+    //$(defaults.swButtonHead).appendTo("head");
+       // turn off spinner and show content
+    $("spinner").hide();    
+    $("notSpinner").show();  
+}; // end setDefaults
+
+
+   
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Write to console log if fail
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+function fail() {
+   $("spinner").hide();
+   $("error").show();
+};
+
+
+</script>
+</head>
+<body>
+
+<hidden style="display:none">
+<input type="hidden" id="qId" value="">
+</hidden> <!-- end id="hiddenInfo" -->
+
+<spinner class="valign-wrapper" style="height: 400px;">
+  <div class="container center-align">
+  <div class="preloader-wrapper big active">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+ </spinner>
+ 
+
+    
+ <error style="display:none">
+   <div class="container">
+    Opps, Error, try closing and reopening the window.<br>
+    <button class="center" onClick="google.script.host.close()">Close</button>
+   </div>
+ </error>
+
+
+ <notSpinner style="display:none">
+
+<header>
+These settings apply to every question set to be eliminated.
+</header>
+
+
+    <!-- Main -->
+    <main>
+    <br>
+      <!-- Switch -->
+  <div class="switch">
+  
+    <label>
+      Off
+      <input type="checkbox">
+      <span class="lever"></span>
+      On
+    </label>
+    &nbsp; &nbsp;Run a nightly auto-update
+  </div>
+    
+    
+    
+    
+    
+</main>
+
+<footer>
+
+
+</footer><!-- end id="footer" -->
+
+<menu>
+ <div class="fixed-action-btn horizontal" style="bottom: 40px; right: 24px;">
+    <a class="btn-floating btn-large teal">
+      <i id="menuIcon" class="material-icons">menu</i>
+    </a>
+    <ul>
+      <li><a class="btn-floating red tooltipped" onclick="google.script.host.close();" data-position="top" data-delay="50" data-tooltip="Close"><i class="material-icons">close</i></a></li>
+    </ul>
+  </div>
+  </menu>
+  
+   </notSpinner>
+</body>
+</html>
+
+
+

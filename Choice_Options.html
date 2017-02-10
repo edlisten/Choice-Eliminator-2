@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+<!--<link rel="stylesheet" href="https://ssl.gstatic.com/docs/script/css/add-ons.css"> -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+ 
+<!-- This will fix the scroolbar caused by materialze.css --> 
+  <style> 
+   [class] {
+           will-change: unset;
+          -webkit-backface-visibility: visible;
+        /*  backface-visibility: visible; */
+          }
+   [type="checkbox"]:checked + label:before {
+          -webkit-backface-visibility: visible;
+          backface-visibility: visible;
+         }
+   </style> 
+
+<!--https://design.google.com/icons/ -->
+
+<style>
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+.material-icons.md-dark.pointer {cursor: pointer;}
+</style>
+
+
+ <style>main {top: 100px;bottom: 26px;width: 100%} body{margin:5;width:100%;height:100%;overflow-x:hidden}footer,header{position:fixed;width:100%}header{top:0}footer{bottom:0}main{position:absolute;border-top:2px solid #F2F2F2;border-bottom:2px solid #F2F2F2;overflow:auto;overflow-x:hidden}</style>
+     
+    
+    
+    <style>
+
+    
+        li div { height: 40px; } 
+        .underline {border-bottom: 2px solid #F2F2F2;}
+
+
+    .cMove {width: 30px; float: left;}
+    .cLimit {width: 55px; float: left;}
+    .cCount {width: 75px; float: left;}
+    .cChoice {float: left;}
+    .cRemove {width: 30px; float: right;}
+    
+    .cMoveT {width: 30px;}
+    .cLimitT {width: 55px;}
+    .cChoiceT {}
+    .cRemoveT {width: 30px;}
+    
+    input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+    
+    
+    
+    #choices {padding-bottom:60px;}
+
+    .spinme {
+    -webkit-animation: rotation 2s infinite linear;
+    }
+
+   @-webkit-keyframes rotation {
+    from {-webkit-transform: rotate(0deg);}
+    to   {-webkit-transform: rotate(359deg);}
+   }
+    
+    </style>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/jquery-ui.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+
+<script>
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// on Open
+//////////////////////////////////////////////////////////////////////////////////////////////////
+$(function() {
+    google.script.run.withSuccessHandler(populateChoices).withFailureHandler(fail).getMCDefaults();
+});
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Populate defaults
+// onChange events
+//////////////////////////////////////////////////////////////////////////////////////////////////
+function populateChoices(defaults) {
+    //$(defaults.swButtonHead).appendTo("head");
+    var d = defaults.data;
+    //load information
+    //$("#qTitle").html(d[2][1]);
+    $("#qId").val(d[3][1]);
+    $("#qidfooter").html(d[3][1]);
+    $("#qType").html(d[4][1]);
+    $("#backupText").val(d[5][1]);
+    //setup title
+    var title = d[2][1];
+    $("#qTitle").html(title);
+    $("#qTitle").attr('data-tooltip', title);
+    $("#qTitle").tooltip();
+    // set type icon
+    var type = d[4][1];
+    var icon = "info";
+    switch (type) {
+        case "MULTIPLE_CHOICE":
+            icon = "radio_button_checked";
+            break;
+        case "CHECKBOX":
+            icon = "check_box";
+            break;
+        case "LIST":
+            icon = "arrow_drop_down_circle";
+            break;
+    }
+    $("#typeIcon").html(icon);
+    for (var i = 8; i < d.length; i++) {
+        var c = d[i];
+            
+            var row = '<li>' 
+            + '<div class="r cItem">' 
+            + '<div class="cMove valign-wrapper"><i class="valign material-icons md-dark pointer cMoveIcon"></i></div>' // X move
+            + '<div class="cLimit valign-wrapper"><input style="width: 40px;" type="number" class="limit"' + c[2] + '" value="' + c[2] + '"></div>' // Limit
+            + '<div class="cCount valign-wrapper"><span class="valign">(Count: ' + c[8] + ') </span></div>' // count
+            + '<div class="cChoice valign-wrapper"><span class="valign">' + c[0] + '</span></div>' // count
+            + '<div class="cRemove valign-wrapper"><i class="valign material-icons md-dark pointer clearIcon" onclick="removeChoice(this)"></i></div>' // X remove
+            + '<input type="hidden" class="theName" value="' + c[0] + '">' //choice name
+            + '</div>' + '</li>';
+            
+            
+        $("#choices").append(row);
+    }
+    
+//    // rename function, not yet finished
+//    $(".cChoice").click(function(){
+//    var currentName = $(this).closest("li").find(".theName").val();
+//    console.log(currentName);
+//    var renameTextBox = '<div class="cChoice valign-wrapper" style="width:55%"><span class="valign" style="width:100%"><span id="renamed" style="margin-left:"50px"><input type="text" id="newName" value='+currentName+'></span></span></div>'
+//    $(this).html(renameTextBox);
+//    
+//    
+//    });
+    
+ 
+ 
+    
+    //sortable start and new position.
+    $("#choices").sortable({
+        start: function(event, ui) {
+            var start_pos = ui.item.index();
+            ui.item.data('start_pos', start_pos);
+        },
+        update: function(event, ui) {
+            var start_pos = ui.item.data('start_pos');
+            var end_pos = ui.item.index();
+            var sorted = {
+                "start": start_pos + 9,
+                "end": end_pos + 9,
+                "id": $("#qId").val()
+            };
+        console.log(sorted);
+            google.script.run.onSortChange(sorted);
+        }
+    }); //end sortable
+    
+    
+    $("#choices").disableSelection();
+    // on mouse over events
+    $(".cItem").hover(function() {
+        //    $( this ).find(".cMoveIcon").show();
+        $(this).find(".cMoveIcon").html("drag_handle");
+        $(this).find(".clearIcon").html("clear");
+        $(this).addClass("underline");
+    }, function() {
+        //    $( this ).find(".cMoveIcon").hide();
+        $(this).find(".cMoveIcon").html("");
+        $(this).find(".clearIcon").html("");
+        $(this).removeClass("underline");
+    });
+    // backup text enter
+    $("#backupText").change(function() {
+        //console.log($(this).val());
+        var newBackText = {
+            "newText": $(this).val(),
+            "id": $("#qId").val()
+        };
+        google.script.run.withSuccessHandler(saveBackupTextSucess).withFailureHandler(
+            fail).saveBackupText(newBackText);
+        //google.script.run.withFailureHandler(fail).saveBackupText(newBackText);
+    });
+    //limit change
+    $(".limit").change(function() {
+        var newLimit = {};
+        //limit.choice = $(this).closest('li').find('.choice').val();
+        newLimit.choice = $(this).closest('li').find('.theName').val();
+        newLimit.id = $("#qId").val();
+        newLimit.limit = $(this).val();
+        google.script.run.withSuccessHandler(changeLimitSucess).withFailureHandler(
+            fail).changeLimit(newLimit);
+        //google.script.run.withFailureHandler(fail).changeLimit(newLimit);
+    });
+    
+    
+    $('.tooltipped').tooltip();
+    $("#menuIcon").html("menu").removeClass("spinme");
+    
+    // turn off spinner and show content
+    $("spinner").hide();    
+    $("notSpinner").show();    
+    
+    
+}; // end setDefaults
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// onLimit change
+//////////////////////////////////////////////////////////////////////////////////////////////////
+function changeLimitSucess() {
+        $("#limitTxtSave").delay(400).show().delay(800).fadeOut(400);
+        //console.log("Saved");
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // onBackup Text Change
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+function saveBackupTextSucess() {
+        $("#backupTxtSave").delay(400).show().delay(800).fadeOut(400);
+        //console.log("Saved");
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // Add Choice, not finished
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+function addChoice() {
+
+        var row = '<li>' 
+            + '<div class="r cItem">' 
+            + '<div class="cMove valign-wrapper"><i class="valign material-icons md-dark pointer cMoveIcon"></i></div>' // Identical
+            + '<div class="cLimit valign-wrapper"><input style="width: 40px;" type="number" class="limit" value="1"></div>' // Different
+            + '<div class="cCount valign-wrapper"><span class="valign">(Count: 0) </span></div>' // coun
+            + '<div class="cChoice valign-wrapper" style="width:55%"><span class="valign" style="width:100%"><span id="added" style="margin-left:"50px"><input type="text" id="newChoiceName"></span></span></div>' // different
+            + '<div class="cRemove valign-wrapper"><i class="valign material-icons md-dark pointer clearIcon" onclick="removeChoice(this)"></i></div>' // X remove
+            + '<input type="hidden" class="theName" value="not yet completed">' //choice name
+            + '</div>' + '</li>';
+
+            
+        $("#choices").append(row);
+        //add new Choice onChange
+        $("#newChoiceName").change(function() {
+        var newChoiceTxt = $(this).val();
+        $(this).closest('li').find('.theName').val(newChoiceTxt);
+
+            var newChoice = {};
+            newChoice.id = $("#qId").val();
+            newChoice.newChoice = newChoiceTxt;
+            
+            $("#added").html(newChoiceTxt);
+            $("#added").removeAttr('id');
+            google.script.run.addChoice(newChoice);  // turn this back on to actually effect the form
+        });
+        
+        //rerun onHover
+            $(".cItem").hover(function() {
+        //    $( this ).find(".cMoveIcon").show();
+        $(this).find(".cMoveIcon").html("drag_handle");
+        $(this).find(".clearIcon").html("clear");
+        $(this).addClass("underline");
+    }, function() {
+        //    $( this ).find(".cMoveIcon").hide();
+        $(this).find(".cMoveIcon").html("");
+        $(this).find(".clearIcon").html("");
+        $(this).removeClass("underline");
+    });
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    // remove choice
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+function removeChoice(obj) { //
+    //http://stackoverflow.com/questions/6933763/how-do-i-select-item-with-class-within-a-div-in-jquery
+    var remove = {};
+    remove.choice = $(obj).closest('li').find('.theName').val();
+    remove.id = $("#qId").val();
+    $(obj).closest('li').unbind().click(function() {
+        $(this).css("background-color", "#FF3700");
+        $(this).fadeOut(400, function() {
+            $(this).remove();
+            google.script.run.removeChoice(remove);
+        });
+    });
+};
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Reset count
+//////////////////////////////////////////////////////////////////////////////////////////////////
+function resetCount() {
+    var id = $("#qId").val();
+    $("#choices").html("");
+    $("#menuIcon").html("hourglass_empty").addClass("spinme");
+    $('.fixed-action-btn').closeFAB();
+    //console.log(id);
+    google.script.run.withSuccessHandler(resetCountSucess).withFailureHandler(
+        fail).resetCount(id);
+}
+
+function resetCountSucess() {
+        $("#menuIcon").html("menu").removeClass("spinme");
+        //console.log("getDefaults");
+        google.script.run.withSuccessHandler(populateChoices).withFailureHandler(fail).getMCDefaults();
+    }
+
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// get questions from form
+//////////////////////////////////////////////////////////////////////////////////////////////////    
+function getNewQuestions(){
+//$("#choices").html("");
+$("#menuIcon").html("hourglass_empty").addClass("spinme");
+$('.fixed-action-btn').closeFAB();
+var id = $("#qId").val();
+google.script.run.withSuccessHandler(getNewQuestionsSucess).withFailureHandler(fail).getChoicesFromForm(id);
+}
+
+function getNewQuestionsSucess(){
+$("#choices").html("");
+google.script.run.withSuccessHandler(populateChoices).withFailureHandler(fail).getMCDefaults();
+}
+    
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////
+// Write to console log if fail
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+function fail() {
+   $("spinner").hide();
+   $("error").show();
+};
+
+
+</script>
+</head>
+<body>
+
+<hidden style="display:none">
+<input type="hidden" id="qId" value="">
+</hidden> <!-- end id="hiddenInfo" -->
+
+<spinner class="valign-wrapper" style="height: 400px;">
+  <div class="container center-align">
+  <div class="preloader-wrapper big active">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+ </spinner>
+ 
+
+    
+ <error style="display:none">
+   <div class="container">
+    Opps, Error, try closing and reopening the window.<br>
+    <button class="center" onClick="google.script.host.close()">Close</button>
+   </div>
+ </error>
+
+
+ <notSpinner style="display:none">
+
+<header>
+      <div>
+     <i class="material-icons left Medium" style="margin-left:10px"><span id="typeIcon"></span></i><span style="font-size: 1em;"id="qTitle" class="truncate tooltipped flow-text"></span>
+    </div>
+  
+    <div class="input-field" style="margin-top:25px">
+   <!-- <span style='font-weight: bold; margin-left:50px'>Backup Text: </span><input type="text" id="backupText"><span style="color:red; display:none" id="backupTxtSave"> Saved!</span>-->
+    <div class="row">
+    <div class="col l6">
+      <label for="backupText" class="active">Backup Text</label><input type="text" id="backupText" value="No More Options"> 
+    </div>
+    <div class="col l6">
+      <span style="color:red;display:none;" id="backupTxtSave"> Saved!</span> 
+    </div>
+    </div>
+
+
+  </div>
+</header>
+
+
+
+
+
+    <!-- Main -->
+    <main>
+    
+
+     <div style="margin: 10px 0px 0px 30px;font-weight: bold;">Limit</div>
+     <ul id="choices" name="choices"></ul>
+     
+
+</main>
+
+<footer>
+<!-- <div style="float:left; color:gray" class="tooltipped" data-position="top" data-delay="50" data-tooltip="This is the time it took to remove choices after the last submission."> -->
+  <div style="float:left; color:gray">           
+            Question ID: <span id="qidfooter"></span>
+        </div>
+
+
+</footer><!-- end id="footer" -->
+
+<menu>
+ <div class="fixed-action-btn horizontal" style="bottom: 40px; right: 24px;">
+    <a class="btn-floating btn-large teal">
+      <i id="menuIcon" class="material-icons">menu</i>
+    </a>
+    <ul>
+      <li><a class="btn-floating blue tooltipped" onclick='addChoice()' data-position="top" data-delay="50" data-tooltip="Add Choice"><i class="material-icons">add</i></a></li>
+      <li><a class="btn-floating blue tooltipped" onclick='getNewQuestions()' data-position="top" data-delay="50" data-tooltip="Get Q's From Form"><i class="material-icons">find_replace</i></a></li>
+      <li><a class="btn-floating blue tooltipped" onclick='resetCount()' data-position="top" data-delay="50" data-tooltip="Restore Choices"><i class="material-icons">present_to_all</i></a></li>
+      <li><a class="btn-floating red tooltipped" onclick="google.script.host.close();" data-position="top" data-delay="50" data-tooltip="Close"><i class="material-icons">close</i></a></li>
+    </ul>
+  </div>
+  </menu>
+  
+   </notSpinner>
+</body>
+</html>
+
+
+

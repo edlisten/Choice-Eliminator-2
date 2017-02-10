@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+      <!-- http://materializecss.com/getting-started.html -->
+    
+      <!-- Compiled and minified CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/css/materialize.min.css">
+ 
+<!-- This will fix the scroolbar caused by materialze.css --> 
+  <style> 
+   [class] {
+           will-change: unset;
+          -webkit-backface-visibility: visible;
+        /*  backface-visibility: visible; */
+          }
+   [type="checkbox"]:checked + label:before {
+          -webkit-backface-visibility: visible;
+          backface-visibility: visible;
+         }
+   </style>  
+   
+   <!-- style adjustments -->
+   <style>
+         .collapsible-body, .collapsible-header {
+         border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+         }
+         
+    .collapsible {
+      border-top: 1px solid rgba(0, 0, 0, 0.2);
+      border-right: 1px solid rgba(0, 0, 0, 0.2);
+      border-left: 1px solid rgba(0, 0, 0, 0.2);
+      margin: 0.5rem 0 1rem 0;
+    }
+    
+    .maButton {
+    background: none;
+	border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    }
+    
+    .maButton:active {
+    background: white;
+    box-shadow: 5px 5px 15px grey;
+    }
+    
+    .spinme {
+    -webkit-animation: rotation 2s infinite linear;
+    }
+
+   @-webkit-keyframes rotation {
+    from {-webkit-transform: rotate(0deg);}
+    to   {-webkit-transform: rotate(359deg);}
+   }
+   
+   
+
+   
+   .blink_text {
+    display: inline;
+    color: inherit;
+    animation: blink 1.5s steps(1) infinite;
+    -webkit-animation: blink 1.5s steps(1) infinite;
+    }
+    @keyframes blink { 50% { color: transparent; } }
+    @-webkit-keyframes blink { 50% { color: transparent; } }
+    
+    
+    .border {
+    border:1px solid red;
+    }
+   
+   </style>
+   
+   
+ <!--  <link rel="stylesheet" href="https://www.edlisten.net/files/materialize-4appscript/css/materialize.min.css"> -->
+ <!--  <link rel="stylesheet" href="https://storage.googleapis.com/edlisten_scripts_bucket/materialize-4appscript/css/materialize2.min.css"> -->
+      
+      <style>main {top: 55px;bottom: 50px;width: 100%} body{margin:5;width:100%;height:100%;overflow-x:hidden}footer,header{position:fixed;width:100%}header{top:0}footer{bottom:0}main{position:absolute;border-top:2px solid #F2F2F2;border-bottom:2px solid #F2F2F2;overflow:auto;overflow-x:hidden}</style>
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <style>
+          .material-icons, .icon-text {
+      vertical-align: middle;
+    }
+    </style>
+    
+      <!-- Javascript -->
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.97.5/js/materialize.min.js"></script>
+      <script>
+        
+        $(function() {
+//        $("#testBlink").fadeOut(500).fadeIn(500, blink);
+        
+          google.script.run.withSuccessHandler(populateQuestions).withFailureHandler(fail).getCEDefaults();
+        });
+        
+        
+        
+        function populateQuestions(defaults){
+
+          
+          //run time
+          var runTime = defaults.runTime;
+          if (!runTime) {
+          $("#runTime").html("Not yet recorded");
+          } else {
+          $("#runTime").html(runTime + "s");
+          }
+          
+          //populate data sheet select box
+          var dataSheets = defaults.dataSheets;
+          var dataSheet = defaults.dataSheet;
+          for (h in dataSheets){
+            if (dataSheets[h] == dataSheet){
+                $("#dataSheetSelect").append('<option value="'+dataSheets[h]+'" selected>'+dataSheets[h]+'</option>')
+                } else {
+                $("#dataSheetSelect").append('<option value="'+dataSheets[h]+'">'+dataSheets[h]+'</option>')
+                }
+             }
+          var dataSheetF = $('#dataSheetSelect').val();
+          if (!dataSheet){google.script.run.saveDatasheet(dataSheetF)};
+          $('#dataSheetSelect').change(function() {
+          dataSheetF = $('#dataSheetSelect').val();
+          $("#dataSheetSelectDiv").removeClass("border");
+          google.script.run.saveDatasheet(dataSheetF);
+          });
+          $('select').material_select();
+          
+          
+          // Populate questions
+           var questions = defaults.allQuestions;
+           var allQuestionTitles = [];
+          $("#questions").empty();
+          
+          if (questions != ""){
+          for (var i = 0; i < questions.length; i++) {
+          
+//        var entry = {'qID':qID,'title':qTitle,'type':qType,'choiceEliminator':choiceEliminator};
+//        if (qType == 'MULTIPLE_CHOICE' || qType == 'CHECKBOX' || qType == 'LIST'){
+
+          var qID = questions[i].qID;
+          var title = questions[i].title;
+          var type = questions[i].type;
+          var checked = questions[i].choiceEliminator;
+          var icon = "info";
+          allQuestionTitles.push(title);
+          
+          switch (type){
+          case "MULTIPLE_CHOICE":
+            icon = "radio_button_checked";
+          break;
+           case "CHECKBOX":
+            icon = "check_box";
+          break;
+          case "LIST":
+            icon = "arrow_drop_down_circle";
+          break;
+          }
+          
+          var topiconColor = "grey-text";
+          var configButtonState = "disabled";
+          
+          if (checked == "checked"){
+          topiconColor = "red-text";
+          configButtonState ="";
+          }
+
+           var newLi = '<li>'
+            + '<div class="collapsible-header #f5f5f5 grey lighten-4"><i data-topicon class="material-icons '+topiconColor+'">'+icon+'</i><div class="truncate">'+title+'</div></div>'
+            + '<div class="collapsible-body" style="margin-top:10px">'
+            + '<div class="container">'
+            + '<span style="margin-top:10px"><b>Title:</b> '+title+'</span>'
+            + '<br><br><div class="row">'
+            + '<div class="col s9"><input type="checkbox" id="CE'+qID+'" '+checked+' class="filled-in align-left" data-cqid="'+qID+'" data-cqtitle="'+title+'" data-choice><label for="CE'+qID+'">Eliminate Choices</label></div>'
+            + '<div class="col s2"><button data-position="top" data-delay="50" data-tooltip="Choice Options" data-cqconfig '+configButtonState+' class="btn-floating btn-small align-right '+configButtonState+' tooltipped" value="'+qID+'" onclick="google.script.run.openManageChoices(this.value)"> <i class="material-icons">settings</i></button></div>'
+            + '</div>'
+            + '</div>'
+            + '</div>'
+            + '</li>';
+           
+           
+          $("#questions").append(newLi);
+          
+          }
+          } else {
+          
+          var noQhtml = '<div class="container center-align">'
+          + 'No valid questions found'
+          + '</div>'
+          + '<br><div class="container center-align">'
+          + '<button class="waves-effect waves-light btn" onClick="refreshQuestions()">Refresh Question List</button>'
+          + '</div>';
+          
+          
+         $("#questionsContainer").html(noQhtml);
+          
+          
+          }  // if no questions are found
+       
+         $('.collapsible').collapsible();
+         
+         // Questions monitor change
+         // $("[data-question]").change(function(){console.log($(this).data("question"))});
+              $("[data-cqid]").change(function(){
+              var cqID = this.dataset.cqid;
+              var cqChecked = this.checked;
+              var cqTitle = this.dataset.cqtitle;
+              var cqDataSheet = dataSheetF;
+              var thisLi = $(this).parents("li");
+              var configB = thisLi.find("[data-cqconfig]");
+              var topIcon = thisLi.find("[data-topicon]");
+              var versionNumber = $("versionNumber").html();
+              
+              if (cqChecked == true){
+              
+              // check if over 5
+              var elimTotal = 0;
+              $("[data-cqid]").each(function(){
+              if (this.checked == true){++elimTotal};
+              });
+              
+//              console.log(elimTotal);
+              if (elimTotal >5){
+              Materialize.toast('Due to processing time it is not <br>reccomended to have more than 5 <br>questions set to eliminate.', 4000, 'red')
+              }
+              
+              
+              // check if duplicate question
+              var isUnique = 0;
+              for (aqt in allQuestionTitles){
+                 var caqt = allQuestionTitles[aqt];
+                 if (caqt == cqTitle){ ++isUnique};
+              }
+
+              if (isUnique == 1){
+
+              // if no duplicates
+                  var label = $(this).parent().find("label");
+                  label.text("Creating...");
+                  label.addClass("blink_text");
+              
+              console.log(versionNumber); //cqID,cqDataSheet,cqTitle,versionNumber
+              google.script.run.withUserObject(this).withSuccessHandler(addCESheetSucess).withFailureHandler(fail).addCESheet(cqID,cqDataSheet,cqTitle,versionNumber);
+              
+              } else {
+              this.checked = false;
+              Materialize.toast('Multiple questions with the same title being eliminated is not supported', 4000, 'red');
+              }
+              
+              
+              
+              } else {
+              configB.prop("disabled",true);
+              configB.addClass("disabled");
+              topIcon.addClass("grey-text");
+              topIcon.removeClass("red-text");
+              google.script.run.removeCESheet(cqID);
+              removeTrigger();
+              }
+              });
+
+          
+
+          // put at the bottom of populate questions;
+          $('.button-collapse').sideNav({closeOnClick: true});
+          $('.tooltipped').tooltip({delay: 50});
+          $("spinner").hide();
+          $("content").show();
+          }  // end populateQuestions
+        
+       //***********************************************************
+      // end populateQuestions
+      //***********************************************************
+        
+        
+        function removeTrigger(){
+//        console.log("remove");
+        var remove = true;
+        $("[data-choice]").each(function(){
+        if (this.checked == true){remove = false};
+        });
+        
+        if(remove == true){
+        //        console.log("if you see this then delete");
+        google.script.run.enableTrigger(false);
+        
+        };
+        
+        };
+        
+        
+        
+        
+        
+        function fail(err){
+//        for (var prop in err){console.log(err[prop])};
+          $("content").hide();
+          $("spinner").hide();
+          $("error").show();
+          $("#errorMsg").html(err);
+        }
+        
+        
+        
+       function resetAllCounts(){
+          $("#menuIcon").html("hourglass_empty").addClass("spinme");
+          $('.button-collapse').sideNav('hide');
+          google.script.run.withSuccessHandler(resetAllCountsSuccess).withFailureHandler(fail).resetAllCounts();
+       }
+       
+      function resetAllCountsSuccess(){
+          $("#menuIcon").html("menu").removeClass("spinme");
+          $('.button-collapse').sideNav('hide');
+       }
+        
+        function refreshQuestions(){
+        $("error").hide();
+        $("content").hide();
+        $("spinner").show();
+        $("#questionsContainer").html('<ul id="questions" class="collapsible" data-collapsible="accordion"></ul>');
+        $("#dataSheetSelect").empty();
+        
+        google.script.run.withSuccessHandler(populateQuestions).withFailureHandler(fail).getCEDefaults()
+        }
+        
+        
+        function addCESheetSucess(error, thisObj){
+//        console.log(thisObj);
+              var cqID = thisObj.dataset.cqid;
+              var cqChecked = thisObj.checked;
+              var cqTitle = thisObj.dataset.cqtitle;
+              var thisLi = $(thisObj).parents("li");
+              var configB = thisLi.find("[data-cqconfig]");
+              var topIcon = thisLi.find("[data-topicon]");
+              
+              var label = $(thisObj).parent().find("label").text("Eliminate Choices");
+              label.removeClass("blink_text");
+
+        
+        if (error == "sucess"){
+              configB.prop("disabled", false);
+              configB.removeClass("disabled");
+              topIcon.removeClass("grey-text");
+              topIcon.addClass("red-text");
+              
+        
+        } else {
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        
+        $("#dataSheetSelectDiv").addClass("border");
+       Materialize.toast('Data Sheet is not set properly.', 6000, 'red');
+       thisObj.checked = false;
+       google.script.run.removeCESheet(cqID);
+       removeTrigger();
+        
+        
+        }
+        
+        }
+        
+        
+      </script>
+    
+     <title></title>   
+      <!--Let browser know website is optimized for mobile-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      
+</head>
+   <body>
+       <spinner class="valign-wrapper" style="height: 400px;">
+  <div class="container center-align">
+  <div class="preloader-wrapper big active">
+    <div class="spinner-layer spinner-blue-only">
+      <div class="circle-clipper left">
+        <div class="circle"></div>
+      </div><div class="gap-patch">
+        <div class="circle"></div>
+      </div><div class="circle-clipper right">
+        <div class="circle"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+    </spinner>
+    
+    <error style="display:none">
+    <div class="container">
+    Opps, Error:
+    <div id="errorMsg"></div>
+    <button class="center" onClick="refreshQuestions()">Refresh</button>
+
+   </div>
+    
+    </error>
+    
+    <navigation>
+    <ul id="slide-out" class="side-nav">
+      <li class="no-padding"><a onclick="resetAllCounts()" style="cursor: pointer;"><i class="material-icons">present_to_all</i> Restore All Choices</a></li>
+      <li class="no-padding"><a onclick="refreshQuestions()" style="cursor: pointer;"><i class="material-icons">refresh</i> Refresh Question List</a></li> 
+      <li class="no-padding"><a onclick="google.script.run.openTutorials()" style="cursor: pointer;"><i class="material-icons">playlist_play</i> Tutorials</a></li> 
+      <li class="no-padding"><a onclick="google.script.run.openChangeLog()" style="cursor: pointer;"><i class="material-icons">help_outline</i> Change Log</a></li> 
+      <li class="no-padding"><a onclick="google.script.run.openCE_Settings()" style="cursor: pointer;"><i class="material-icons">settings</i> Settings</a></li> 
+
+      <li class="no-padding divider"></li> 
+      <li class="no-padding"><a href="https://www.paypal.me/BjornBehrendt/" style="cursor: pointer;"><i class="material-icons">attach_money</i> Donate</a></li> 
+      <li class="no-padding"><a href="https://plus.google.com/u/0/communities/109383908101699779995" style="cursor: pointer;"><i class="material-icons">group_add</i>  G+ Community</a></li> 
+     <li class="no-padding"><a onclick="google.script.run.openAbout()" style="cursor: pointer;"><i class="material-icons">info</i>  About the Author</a></li> 
+    </ul>
+    </navigation>
+    
+
+   <content style="display:none">
+   
+   
+    <!-- Header -->
+    <header>
+
+<div class="container" style="margin-top:10px">
+    <a href="#" data-activates="slide-out" class="button-collapse show-on-large" style="float: left;"><i id="menuIcon" class="material-icons grey-text" style="font-size: 30px;">menu</i></a>
+    <div class="container center-align">
+
+ <!--   Click on the question title to enable/disable elimination. -->
+ <div onClick="google.script.run.openWarning()" class="red-text" style="cursor: pointer;">I am shutting CE down</div>
+    
+    </div>
+
+<!--    <div class="switch container center-align">
+    <label class="tooltipped center-align" data-position="bottom" data-delay="50" data-tooltip="Turn on to start eliminating questions">
+      Off
+      <input id="onoff" type="checkbox">
+      <span class="lever"></span>
+      On
+    </label>
+  </div> -->
+  
+  </div>
+    </header><!-- End Header -->
+    
+    
+    <!-- Main -->
+    <main>
+
+    
+    
+    
+    <div class="container">
+          <div class="input-field col s12" id="dataSheetSelectDiv">
+    <select id="dataSheetSelect">
+    </select>
+ <!--   <input type="hidden" id="dataSheet"> -->
+    <label class="tooltipped" data-position="top" data-delay="50" data-tooltip="This is the sheet name that the restulst go to.">Data sheet:</label>
+    </div>
+    </div>
+    
+    
+    <div class="container" id="questionsContainer">
+    <ul id="questions" class="collapsible" data-collapsible="accordion"></ul>
+    </div>
+
+    </main><!-- End Main -->
+    
+    </content>
+     <!-- Footer -->
+ <footer>
+ 
+ <div class="container">
+        <div style="float:left; color:gray" class="tooltipped" data-position="top" data-delay="50" data-tooltip="This is the time it took to remove choices after the last submission.">
+            Process time: <span id="runTime" onClick="google.script.run.openGame()"></span><br>
+        </div>
+     <div style="float:right; margin-right: 10px; color:gray" class="tooltipped" data-position="top" data-delay="50" data-tooltip="Click to open Debug window">
+      <!--  <div style="float:right; margin-right: 10px; color:gray"> -->
+            <span onClick="google.script.run.debug()" style="cursor: pointer;" id="versionNumber">2.2</span>
+        </div>
+        </div>
+         <div class="grey lighten-3 grey-text" style="margin-top:24px"><div class="container">
+      Want simpler try: <a href="https://chrome.google.com/webstore/detail/choice-eliminator-lite/bnhfpdpmedfdodojojabjlpchcjemlml">Choice Eliminator Lite</a>
+      </div></div>
+        
+ </footer><!-- End Footer -->
+ 
+         
+</body>
+</html>
